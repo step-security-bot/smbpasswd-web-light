@@ -116,6 +116,28 @@ systemctl enable smbpasswd-web.service
 
 Migrated to issues. PRs are welcome! :)
 
+
+## Docker usage
+
+A docker container exists. It uses the network to remotely update a password. This means that if an account is locked, it will not be possible to change it using this docker container.
+
+The environment variables to use for the docker container are the following:
+
+* `VERBOSE`: (Optional) When used, the logs will be verbose;
+* `SSL_CERT` & `SSL_KEY`: (Optional) Have to be used together. Represent the file path of the mounted TLS certificate to use. Without both of these variables, the application will not expose TLS port.
+
+The application files are putted in the `/app` directory.
+
+Logs are available on the STDOUT.
+
+
+### Commands
+
+The following commands are available in the docker images:
+
+* `gen-token`, using the same command line of the `./app.py gen-token` script.
+
+
 ## License
 
  *smbpasswd-web* is released under the MIT license. See LICENSE.
