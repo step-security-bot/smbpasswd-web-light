@@ -51,7 +51,7 @@ When a user needs to change his password, the user accesses the website and chan
 
 To install this software, you have to use the container. To install the container, here are the instructions:
 
-1. Pull the docker image (`ajabep/smbpasswd-web-light`)[https://docker.com/TODO];
+1. Pull the docker image [`ajabep/smbpasswd-web-light`](https://hub.docker.com/r/ajabep/smbpasswd-web-light);
 2. The container has to be linked to the SMB server.
 3. The environment variables are to are the following:
 3.1. `REMOTE`: (string; an IP or a domain name) The address of the remote SMB server;
