@@ -9,6 +9,10 @@ insert_final_newline = true
 max_line_length = 120
 tab_width = 4
 
+[*.py]
+indent_style = space
+max_line_length = 100
+
 [*.{yaml,yml}]
 indent_size = 2
 indent_style = space
