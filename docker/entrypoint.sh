@@ -1,41 +1,43 @@
 #!/bin/sh
-set -ex
+set -e
 
 # If we want to generate a token
-if [ "$#" -gt 0 ] && [ "$1" = "gen-token" ]
+if [ "$#" -gt 0 ]
 then
-    exec python3 /app/app.py "$@"
+	if [ "$1" = "sh" ]
+	then
+		exec /bin/ash
+	elif [ "$1" = "python" ]
+	then
+		exec poetry run python
+	fi
 fi
 
 # Let's start the serve!
-set -- --address 0.0.0.0
+set --
 
 if [ "$VERBOSE" != "" ]
 then
-    set -- "$@" --verbose
+    set -- "$@" -v
+
+    if [ "$VERBOSE" -gt 1 ]
+    then
+        set -- "$@" -v
+    fi
+    if [ "$VERBOSE" -gt 2 ]
+    then
+        set -- "$@" -v
+    fi
 fi
 
-if [ "$SSL_CERT" != "" ] || [ "$SSL_KEY" != "" ]
+# shellcheck disable=SC2039
+if [ "$REMOTE" = "" ]
 then
-    # Error checking
-    if [ "$SSL_CERT" = "" ] || [ "$SSL_KEY" = "" ]
-    then
-        echo "You have to use SSL_CERT and SSL_KEY together!"
-        exit 1
-    fi
-    if [ -e "$SSL_CERT" ]
-    then
-        echo "The '$SSL_CERT' file is not mounted!"
-        exit 1
-    fi
-    if [ -e "$SSL_KEY" ]
-    then
-        echo "The '$SSL_KEY' file is not mounted!"
-        exit 1
-    fi
-
-    set -- "$@" --ssl --ssl-cert "$SSL_CERT" --ssl-key "$SSL_KEY"
+    echo "To run this in a docker container, you have to provide a remote server."
+    exit 1
 fi
+ping -c 1 "$REMOTE"
+set -- "$@" "$REMOTE"
 
 # shellcheck disable=SC2048,SC2086
-exec python3 /app/app.py server "$@"
+exec poetry run python /app/app.py "$@"

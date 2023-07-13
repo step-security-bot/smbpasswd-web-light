@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "smbpasswd-web"
+version = "0.1.0"
+description = ""
+license = "Unlicense"
+authors = ["Ajabep <ajabep@tutanota.com>"]
+readme = "README.md"
+#packages = [{include = "."}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+flask = "^2.3.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

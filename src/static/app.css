@@ -1,0 +1,104 @@
+:root {
+	background: #f6f6f6;
+	color: #1C1C1C;
+	font-family: sans-serif;
+	text-align: justify;
+	font-size: 20pt;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		background: #1C1C1C;
+		color: #f6f6f6;
+	}
+}
+
+* {
+	font-size: 1rem;
+	box-sizing: border-box;
+}
+
+html, body {
+	margin: 0;
+	padding: 0;
+}
+
+
+
+
+
+body {
+	height: 100vh;
+	width: 100vw;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+form {
+	max-width: 500px;
+	margin: auto;
+}
+
+label::after {
+	content: ':';
+}
+
+label,
+input {
+	width: 100vw;
+	max-width: 100%;
+	display: block;
+}
+
+.hidden {
+	display: none;
+}
+
+input,
+.error-msg,
+.success-msg,
+.red-msg,
+.orange-msg,
+.yellow-msg,
+.blue-msg,
+.green-msg {
+	margin-bottom: .5rem;
+	padding: .3rem;
+}
+
+.error-msg *,
+.success-msg *,
+.red-msg *,
+.orange-msg *,
+.yellow-msg *,
+.blue-msg *,
+.green-msg * {
+	margin: 0;
+}
+
+.red-msg,
+.error-msg {
+	border: red solid .2rem;
+	background: rgba(255, 0, 0, .3);
+}
+.green-msg,
+.success-msg {
+	border: green solid .2rem;
+	background: rgba(0, 255, 0, .3);
+}
+.yellow-msg {
+	border: yellow solid .2rem;
+	background: rgba(255, 255, 0, .3);
+}
+.orange-msg {
+	border: orange solid .2rem;
+	background: rgba(255, 128, 0, .3);
+}
+.blue-msg {
+	border: rgb(173, 216, 230) solid .2rem;
+	background: rgba(173, 216, 230, .3);
+}
+
+#submit {
+	height: 2rem;
+}
