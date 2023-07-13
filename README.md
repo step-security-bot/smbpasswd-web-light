@@ -17,18 +17,10 @@ administrator (as the stuff with token of the original project) is needed. It's 
 run.
 * Usage of a web browser is the ONLY requirement for users.
 
-// TODO Verify the accessibility
-
-// TODO Add password strength indicator
-
-// TODO i18n/l10n
-
 It's also extensible: it exposes an API.
 
 It tries to be as safe as possible, thus, if you find a security vulnerability, do not hesitate to report it to me, and
 we will see, depending on the criticism of the finding, how may I give you a reward. #BugBounty
-
-// TODO: Deploy a security.txt
 
 
 ## Sneak peek
@@ -73,7 +65,8 @@ Logs are available on the STDOUT.
 
 ### TODO
 
-Check issues and fix some of them! Also, fix the current TODO in the code!
+Check issues and fix some of them!
+
 
 ## License
 

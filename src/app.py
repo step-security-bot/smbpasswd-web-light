@@ -28,9 +28,6 @@ app = Flask(__name__)
 app.secret_key = secrets.token_hex()
 
 
-# TODO Document the API
-
-
 class APIResponse:
 	@enum.unique
 	class ResponseType(enum.IntEnum):
@@ -160,7 +157,6 @@ def smbpasswd(username: str, old_password: str, new_password: str) -> typing.Opt
 
 @app.get("/")
 def index():
-	# TODO cache the result
 	return render_template('index.html')
 
 
@@ -182,8 +178,6 @@ def api():
 		return APIResponse({})
 	return APIServerError(ret_code)
 
-
-# TODO Add support of Dashlane auto renew password API
 
 def main():
 	global remote_addr
@@ -215,7 +209,7 @@ def main():
 		debug=args.verbose >= 1,
 		host=DEFAULT_ADDRESS,
 		port=DEFAULT_PORT
-	)  # TODO migrate to a WSGI server before going live.
+	)
 
 
 if __name__ == "__main__":

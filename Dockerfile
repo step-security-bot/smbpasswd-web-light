@@ -1,4 +1,3 @@
-# TODO add minification
 FROM alpine:3
 
 COPY --chown=root:root ./src/ /app/
