@@ -15,8 +15,7 @@ RUN apk add --update --no-cache samba-common-tools=4.18.4-r0 \
  && chown appuser:root /app/home \
  && chmod 0700 /app/home \
  && chmod 0555 /app/app.py /entrypoint.sh \
- && mkdir /.cache && chown nobody:nobody /.cache \
- && apk add --update sudo
+ && mkdir /.cache && chown nobody:nobody /.cache
 
 USER appuser
 RUN poetry install

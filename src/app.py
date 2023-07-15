@@ -10,7 +10,7 @@ import enum
 import logging
 import os
 import secrets
-import subprocess
+import subprocess  # nosec: disable=B404
 import sys
 import traceback
 import typing
@@ -18,7 +18,7 @@ import typing
 from flask import Flask, request, Response, jsonify, render_template
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_ADDRESS = '0.0.0.0'
+DEFAULT_ADDRESS = '0.0.0.0'  # nosec: disable=104
 DEFAULT_PORT = 8080
 DEFAULT_PROTO = 'http'
 
@@ -87,8 +87,9 @@ def api_server_error(error_code: APIServerErrorCode) -> Response:
 def smbpasswd(username: str, old_password: str, new_password: str) \
         -> typing.Optional[APIServerErrorCode]:
     """Instantiate smbpasswd"""
+    executable = "/usr/bin/smbpasswd"
     command = [
-        "/usr/bin/smbpasswd",
+        executable,
         "-s",
         "-r",
         app.config['REMOTE_ADDR'],
@@ -105,8 +106,8 @@ def smbpasswd(username: str, old_password: str, new_password: str) \
         logging.debug("Will execute '%s'", "' '".join(command))
         with subprocess.Popen(
             command,
-            executable=command[0],
-            shell=False,
+            executable=executable,
+            shell=False,  # nosec: disable=B603
             # user='nobody',
             # group='nogroup',
             umask=0o7777,
