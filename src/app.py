@@ -12,6 +12,7 @@ import os
 import secrets
 import subprocess  # nosec: disable=B404
 import sys
+import textwrap
 import traceback
 import typing
 
@@ -161,6 +162,24 @@ def smbpasswd(username: str, old_password: str, new_password: str) \
         )
         traceback.print_exc(file=sys.stderr)
         return APIServerErrorCode.UNKNOWN_ERROR
+
+
+@app.get("/.well-known/security.txt")
+def securitytxt():
+    """Security.txt handler/generator"""
+    return Response(
+        textwrap.dedent(
+            # pylint: disable=line-too-long
+            '''\
+            Contact: https://github.com/ajabep/smbpasswd-web-light/blob/main/SECURITY.md
+            Expires: 2023-12-31T23:00:00.000Z
+            Acknowledgments: https://github.com/ajabep/smbpasswd-web-light/blob/main/SECURITY.md#hall-of-fame
+            Preferred-Languages: en, fr
+            '''
+        ),
+        mimetype='text/plain',
+        content_type='text/plain; charset=utf-8'
+    )
 
 
 @app.get("/")
