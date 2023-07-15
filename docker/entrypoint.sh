@@ -39,5 +39,13 @@ fi
 ping -c 1 "$REMOTE"
 set -- "$@" "$REMOTE"
 
-# shellcheck disable=SC2048,SC2086
-exec poetry run python /app/app.py "$@"
+if [ "$UNSAFE_DEVELOPMENT_MODE" = "This is UNSAFE and I want to make this server more vulnerable, PLease, TrUST me, I reALly reaLLY wanT to Be haCKed!" ]
+then
+	echo "WARNING! YOU ENABLED THE DEVELOPMENT MODE. THUS, THIS APPLICATION WILL BE MUCH MORE VULNERABLE!"
+    set -- "$@" --unsafe-development-mode
+	# shellcheck disable=SC2048,SC2086
+    exec poetry run python /app/app.py "$@"
+fi
+
+exec poetry run gunicorn --preload --reuse-port --group nogroup --proxy-allow-from '*' --bind 0.0.0.0:8080 \
+                         --workers 2 "app:create_app('$*')"

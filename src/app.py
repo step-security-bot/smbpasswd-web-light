@@ -15,6 +15,7 @@ import sys
 import traceback
 import typing
 
+from werkzeug.middleware.proxy_fix import ProxyFix
 from flask import Flask, request, Response, jsonify, render_template
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -197,6 +198,13 @@ def main():
     parser.add_argument("remote", help="Address of the remote SMB server")
     parser.add_argument("--url", help="URI behind which the web page is available")
     parser.add_argument("-v", "--verbose", help="Log HTTP requests", action="count", default=0)
+    parser.add_argument(
+        "--unsafe-development-mode",
+        help="UNSAFE; Enable the development mode. DO NOT USE THIS IN PRODUCTION",
+        action="store_true",
+        default=False,
+        dest="devmode"
+    )
 
     # Parse arguments
     args = parser.parse_args()
@@ -215,11 +223,26 @@ def main():
     if args.url is not None:
         logging.info("If your redirection works correctly, it should be available using: %s",
                      args.url)
-    app.run(
-        debug=args.verbose >= 1,
-        host=DEFAULT_ADDRESS,
-        port=DEFAULT_PORT
-    )
+
+    if args.devmode:
+        app.config['DEVMODE'] = True
+        app.run(
+            debug=args.verbose >= 1,
+            host=DEFAULT_ADDRESS,
+            port=DEFAULT_PORT
+        )
+    else:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=1, x_host=1
+        )
+
+
+def create_app(argv) -> Flask:
+    """Create the right app object for WSGI server, and transforms the CLI arguments given as an
+    argument to sys.argv"""
+    sys.argv = argv.split(' ')
+    main()
+    return app
 
 
 if __name__ == "__main__":
