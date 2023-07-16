@@ -11,6 +11,9 @@
 		background: #1C1C1C;
 		color: #f6f6f6;
 	}
+	input[type=image] {
+		filter: invert(100%);
+	}
 }
 
 * {
