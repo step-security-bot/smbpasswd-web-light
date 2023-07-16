@@ -17,7 +17,7 @@ import traceback
 import typing
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask import Flask, request, Response, jsonify, render_template
+from flask import Flask, request, Response, jsonify, render_template, abort
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_ADDRESS = '0.0.0.0'  # nosec: disable=104
@@ -164,6 +164,15 @@ def smbpasswd(username: str, old_password: str, new_password: str) \
         return APIServerErrorCode.UNKNOWN_ERROR
 
 
+@app.before_request
+def force_hostname():
+    """Force the usage of the right hostname"""
+    if request.host != app.config['HOSTNAME']:
+        logging.warning("Just seen a request asking for '%s', expecting the hostname '%s'",
+                        request.host, app.config['HOSTNAME'])
+        abort(404)
+
+
 @app.get("/.well-known/security.txt")
 def securitytxt():
     """Security.txt handler/generator"""
@@ -214,7 +223,6 @@ def main():
         description="Web interface to change samba user's password",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("remote", help="Address of the remote SMB server")
     parser.add_argument("--url", help="URI behind which the web page is available")
     parser.add_argument("-v", "--verbose", help="Log HTTP requests", action="count", default=0)
     parser.add_argument(
@@ -224,6 +232,8 @@ def main():
         default=False,
         dest="devmode"
     )
+    parser.add_argument("remote", help="Address of the remote SMB server")
+    parser.add_argument("hostname", help="The hostname that requests are supposed to use")
 
     # Parse arguments
     args = parser.parse_args()
@@ -237,6 +247,7 @@ def main():
         logging.basicConfig(level=logging.INFO)
 
     app.config['REMOTE_ADDR'] = args.remote
+    app.config['HOSTNAME'] = args.hostname
 
     logging.info("Listening on: %s://%s:%s/", DEFAULT_PROTO, DEFAULT_ADDRESS, DEFAULT_PORT)
     if args.url is not None:

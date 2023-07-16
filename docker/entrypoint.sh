@@ -30,14 +30,20 @@ then
     fi
 fi
 
-# shellcheck disable=SC2039
 if [ "$REMOTE" = "" ]
 then
     echo "To run this in a docker container, you have to provide a remote server."
     exit 1
 fi
-ping -c 1 "$REMOTE"
-set -- "$@" "$REMOTE"
+ping -c 1 "$REMOTE" || (echo "Cannot reach the remote SMB server"; exit 1)
+
+if [ "$HOST" = "" ]
+then
+    echo "To run this in a docker container, you have to provide a remote server."
+    exit 1
+fi
+
+set -- "$@" "$REMOTE" "$HOST"
 
 if [ "$UNSAFE_DEVELOPMENT_MODE" = "This is UNSAFE and I want to make this server more vulnerable, PLease, TrUST me, I reALly reaLLY wanT to Be haCKed!" ]
 then

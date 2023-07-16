@@ -51,6 +51,8 @@ To install this software, you have to use the container. To install the containe
 2. The container has to be linked to the SMB server;
 3. The environment variables are to are the following.
 	- `REMOTE`: (string; an IP or a domain name) The address of the remote SMB server;
+	- `HOST`: (string; an IP or a domain name) The hostname that requests are supposed to use. Add the port number
+	  is not standard;
 	- `VERBOSE`: (Optional; positive integer) When used, the logs will be verbose;
 	- `UNSAFE_DEVELOPMENT_MODE`: (Optional; string) **UNSAFE** to use only when you are developing. If the value is not
 	  the right one (embedded in the entrypoint file ; case-sensitive), the dev mode will not be enabled. Please, make
