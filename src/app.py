@@ -12,10 +12,12 @@ import os
 import secrets
 import subprocess  # nosec: disable=B404
 import sys
+import textwrap
 import traceback
 import typing
 
-from flask import Flask, request, Response, jsonify, render_template
+from werkzeug.middleware.proxy_fix import ProxyFix
+from flask import Flask, request, Response, jsonify, render_template, abort
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_ADDRESS = '0.0.0.0'  # nosec: disable=104
@@ -162,6 +164,75 @@ def smbpasswd(username: str, old_password: str, new_password: str) \
         return APIServerErrorCode.UNKNOWN_ERROR
 
 
+@app.before_request
+def force_hostname():
+    """Force the usage of the right hostname"""
+    if request.host != app.config['HOSTNAME']:
+        logging.warning("Just seen a request asking for '%s', expecting the hostname '%s'",
+                        request.host, app.config['HOSTNAME'])
+        abort(404)
+
+
+@app.after_request
+def security_headers(response: Response) -> Response:
+    """Setup some security headers if not already present"""
+    headers = {
+        'Content-Security-Policy': "default-src 'self'; object-src 'none'; base-uri 'none'; "
+                                   "sandbox; form-action 'self'; frame-ancestors 'none'",
+        'X-Content-Type-Options': 'nosniff',
+        'Referer': 'no-referrer',
+        'Permissions-Policy': 'accelerometer=() ambient-light-sensor=() autoplay=() battery=() '
+                              'camera=() display-capture=() document-domain=() encrypted-media=() '
+                              'execution-while-not-rendered=() execution-while-out-of-viewport=() '
+                              'fullscreen=() gamepad=() geolocation=() gyroscope=() hid=() '
+                              'identity-credentials-get=() idle-detection=() local-fonts=() '
+                              'magnetometer=() microphone=() midi=() payment=() '
+                              'picture-in-picture=() publickey-credentials-create=() '
+                              'publickey-credentials-get=() screen-wake-lock=() serial=() '
+                              'speaker-selection=() storage-access=() usb=() web-share=() '
+                              'xr-spatial-tracking=()'
+    }
+    for h_name, h_value in headers.items():
+        if response.headers.get(h_name) is None:
+            response.headers[h_name] = h_value
+    return response
+
+
+@app.get("/robots.txt")
+def robotstxt():
+    """Robots.txt handler/generator"""
+    return Response(
+        textwrap.dedent(
+            # pylint: disable=line-too-long
+            '''\
+            # Stop all search engines from crawling this site
+            User-agent: *
+            Disallow: /
+            '''
+        ),
+        mimetype='text/plain',
+        content_type='text/plain; charset=utf-8'
+    )
+
+
+@app.get("/.well-known/security.txt")
+def securitytxt():
+    """Security.txt handler/generator"""
+    return Response(
+        textwrap.dedent(
+            # pylint: disable=line-too-long
+            '''\
+            Contact: https://github.com/ajabep/smbpasswd-web-light/blob/main/SECURITY.md
+            Expires: 2023-12-31T23:00:00.000Z
+            Acknowledgments: https://github.com/ajabep/smbpasswd-web-light/blob/main/SECURITY.md#hall-of-fame
+            Preferred-Languages: en, fr
+            '''
+        ),
+        mimetype='text/plain',
+        content_type='text/plain; charset=utf-8'
+    )
+
+
 @app.get("/")
 def index():
     """Form to change the passwd"""
@@ -194,9 +265,17 @@ def main():
         description="Web interface to change samba user's password",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("remote", help="Address of the remote SMB server")
     parser.add_argument("--url", help="URI behind which the web page is available")
     parser.add_argument("-v", "--verbose", help="Log HTTP requests", action="count", default=0)
+    parser.add_argument(
+        "--unsafe-development-mode",
+        help="UNSAFE; Enable the development mode. DO NOT USE THIS IN PRODUCTION",
+        action="store_true",
+        default=False,
+        dest="devmode"
+    )
+    parser.add_argument("remote", help="Address of the remote SMB server")
+    parser.add_argument("hostname", help="The hostname that requests are supposed to use")
 
     # Parse arguments
     args = parser.parse_args()
@@ -210,16 +289,32 @@ def main():
         logging.basicConfig(level=logging.INFO)
 
     app.config['REMOTE_ADDR'] = args.remote
+    app.config['HOSTNAME'] = args.hostname
 
     logging.info("Listening on: %s://%s:%s/", DEFAULT_PROTO, DEFAULT_ADDRESS, DEFAULT_PORT)
     if args.url is not None:
         logging.info("If your redirection works correctly, it should be available using: %s",
                      args.url)
-    app.run(
-        debug=args.verbose >= 1,
-        host=DEFAULT_ADDRESS,
-        port=DEFAULT_PORT
-    )
+
+    if args.devmode:
+        app.config['DEVMODE'] = True
+        app.run(
+            debug=args.verbose >= 1,
+            host=DEFAULT_ADDRESS,
+            port=DEFAULT_PORT
+        )
+    else:
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=1, x_host=1
+        )
+
+
+def create_app(argv) -> Flask:
+    """Create the right app object for WSGI server, and transforms the CLI arguments given as an
+    argument to sys.argv"""
+    sys.argv = argv.split(' ')
+    main()
+    return app
 
 
 if __name__ == "__main__":

@@ -1,9 +1,5 @@
 # smbpasswd-web-light
 
-
-**STILL IN DEVELOPMENT; DO NOT USE IT FOR NOW**
-
-
 ## What is it?
 
 More than only "inspired" by [`smbpasswd-web`](https://github.com/Gurkengewuerz/smbpasswd-web), this project aims to be
@@ -54,8 +50,22 @@ To install this software, you have to use the container. To install the containe
 1. Pull the docker image [`ghcr.io/ajabep/smbpasswd-web-light:main`](https://ghcr.io/ajabep/smbpasswd-web-light:main);
 2. The container has to be linked to the SMB server;
 3. The environment variables are to are the following.
- - `REMOTE`: (string; an IP or a domain name) The address of the remote SMB server;
- - `VERBOSE`: (Optional; positive integer) When used, the logs will be verbose;
+	- `REMOTE`: (string; an IP or a domain name) The address of the remote SMB server;
+	- `HOST`: (string; an IP or a domain name) The hostname that requests are supposed to use. Add the port number
+	  is not standard;
+	- `VERBOSE`: (Optional; positive integer) When used, the logs will be verbose;
+    - `DO_NOT_VERIFY_REVERSE_PROXY`: (Optional; string) When the string is `The reverse proxy send X-Forwarded-For and
+	  X-Forwarded-Host headers`, the launch script will not verify if the reverse proxy putted in front of this app is
+	  well configured. This is useful when your docker container is not able to reach your reverse proxy, if your
+	  website has no HTTPS or even for development purpose.
+	- `UNSAFE_DEVELOPMENT_MODE`: (Optional; string) **UNSAFE** to use only when you are developing. If the value is not
+	  the right one (embedded in the entrypoint file ; case-sensitive), the dev mode will not be enabled. Please, make
+	  sure this is used only in a development network and computer. This will only make this container more weak and
+	  vulnerable. If you want to have some verbose log, use the `VERBOSE` variable. This option is **UNSAFE**. Do 
+      **NOT** use it.
+4. You HAVE to put this server BEHIND a reverse-proxy. For more info, refer to the
+   [Flask documentation](https://flask.palletsprojects.com/en/2.3.x/deploying/). Your reverse proxy **HAVE** to set the
+   headers `X-Forwarded-For`, `X-Forwarded-Host`. If you don't want to use them, please, clear them.
 
 
 The application files are putted in the `/app` directory.
