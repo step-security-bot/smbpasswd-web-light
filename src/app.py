@@ -173,6 +173,31 @@ def force_hostname():
         abort(404)
 
 
+@app.after_request
+def security_headers(response: Response) -> Response:
+    """Setup some security headers if not already present"""
+    headers = {
+        'Content-Security-Policy': "default-src 'self'; object-src 'none'; base-uri 'none'; "
+                                   "sandbox; form-action 'self'; frame-ancestors 'none'",
+        'X-Content-Type-Options': 'nosniff',
+        'Referer': 'no-referrer',
+        'Permissions-Policy': 'accelerometer=() ambient-light-sensor=() autoplay=() battery=() '
+                              'camera=() display-capture=() document-domain=() encrypted-media=() '
+                              'execution-while-not-rendered=() execution-while-out-of-viewport=() '
+                              'fullscreen=() gamepad=() geolocation=() gyroscope=() hid=() '
+                              'identity-credentials-get=() idle-detection=() local-fonts=() '
+                              'magnetometer=() microphone=() midi=() payment=() '
+                              'picture-in-picture=() publickey-credentials-create=() '
+                              'publickey-credentials-get=() screen-wake-lock=() serial=() '
+                              'speaker-selection=() storage-access=() usb=() web-share=() '
+                              'xr-spatial-tracking=()'
+    }
+    for h_name, h_value in headers.items():
+        if response.headers.get(h_name) is None:
+            response.headers[h_name] = h_value
+    return response
+
+
 @app.get("/robots.txt")
 def robotstxt():
     """Robots.txt handler/generator"""
