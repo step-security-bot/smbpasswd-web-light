@@ -53,7 +53,7 @@ To install this software, you have to use the container. To install the containe
 
 1. Pull the docker image [`ghcr.io/ajabep/smbpasswd-web-light:main`](https://ghcr.io/ajabep/smbpasswd-web-light:main);
 2. The container has to be linked to the SMB server;
-3. The environment variables are to are the following.
+3. The environment variables are to are the following:
  - `REMOTE`: (string; an IP or a domain name) The address of the remote SMB server;
  - `VERBOSE`: (Optional; positive integer) When used, the logs will be verbose;
 
