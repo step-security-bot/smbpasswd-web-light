@@ -173,6 +173,23 @@ def force_hostname():
         abort(404)
 
 
+@app.get("/robots.txt")
+def robotstxt():
+    """Robots.txt handler/generator"""
+    return Response(
+        textwrap.dedent(
+            # pylint: disable=line-too-long
+            '''\
+            # Stop all search engines from crawling this site
+            User-agent: *
+            Disallow: /
+            '''
+        ),
+        mimetype='text/plain',
+        content_type='text/plain; charset=utf-8'
+    )
+
+
 @app.get("/.well-known/security.txt")
 def securitytxt():
     """Security.txt handler/generator"""
