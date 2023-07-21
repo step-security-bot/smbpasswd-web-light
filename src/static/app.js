@@ -1,227 +1,271 @@
-const SUCCESS = {
-	'title': 'Congrats!',
-	'message': 'You successfully changed your password!'
-};
+'use strict';
 
-const UNKNOWN_ERROR = {
-	'title': 'Error!',
-	'message': 'Unfortunately, an unknown error has occurred. Verify your username, your password and, if the problem ' +
-	           'persists, contact your administrator.'
-};
-const UNKNOWN_CLIENT_ERROR = {
-	'title': 'Unknown error on your side!',
-	'message': 'Unfortunately, an unknown error has occurred. Verify your username, your password and, if the problem ' +
-	           'persists, contact your administrator.'
-};
-const UNKNOWN_SERVER_ERROR = {
-	'title': 'Unknown error on our side!',
-	'message': 'Unfortunately, an unknown error has occurred. Try later and, if the problem persists, contact your ' +
-			   'administrator.'
-};
-const CLIENT_ERROR_CODE = {
-	0: {  // PASSWORDS_DIFFERENT
-		'title': 'Different passwords',
-		'message': 'Your new password and its confirmations are different.'
+var API = {
+	ERROR_CODE: {
+		SUCCESS: 0,
+		CLIENT_ERROR: 1,
+		SERVER_ERROR: 2,
+	},
+	CLIENT_ERROR_CODE: {
+		UNKNOWN_ERROR: -1,
+		PASSWORDS_DIFFERENT: 0,
+	},
+	SERVER_ERROR_CODE: {
+		UNKNOWN_ERROR: -1,
+		TIMEOUT: 0,
+		SMBPASSWD_ERROR: 1,
+		NT_STATUS_ACCESS_DENIED: 2,
+		NT_STATUS_ACCOUNT_DISABLED: 3,
+		NT_STATUS_ACCOUNT_LOCKED_OUT: 4,
+		NT_STATUS_ACCOUNT_RESTRICTION: 5,
+		NT_STATUS_INVALID_ACCOUNT_NAME: 6,
+		NT_STATUS_NAME_TOO_LONG: 7,
+		NT_STATUS_PASSWORD_EXPIRED: 8,
+	},
+	SUCCESS: {
+		'changepasswd': 'You successfully changed your password!',
+	},
+	UNKNOWN_ERROR: 'Unfortunately, an unknown error has occurred. Verify the form and, if the problem persists, ' +
+	               'contact your administrator.',
+	CLIENT_ERROR: {
+		UNKNOWN_ERROR: 'Unfortunately, an unknown error has occurred. Verify the form and, if the problem persists, ' +
+				       'contact your administrator.',
+		PASSWORDS_DIFFERENT: 'Your new password and its confirmations are different.'
+	},
+	SERVER_ERROR: {
+		UNKNOWN_ERROR: 'Unfortunately, an unknown error has occurred. Try later and, if the problem persists, ' +
+		               'contact your administrator.',
+		TIMEOUT: 'A timeout occurred. Verify your username and password. If this problem ' +
+		         'persists, contact your administrator. If you tried too much, your account ' +
+		         'may be disabled.',
+		SMBPASSWD_ERROR: 'An error occurred. Verify your username and password. If this ' +
+		                 'problem persists, contact your administrator. If you tried too much, ' +
+		                 'your account may be disabled.',
+		NT_STATUS_ACCESS_DENIED: 'Recheck your password and username. If this problem ' +
+		                         'persists, contact your administrator. If you tried too much, ' +
+		                         'your account may be disabled.',
+		NT_STATUS_ACCOUNT_DISABLED: 'Your account has been disabled. Contact your administrator.',
+		NT_STATUS_ACCOUNT_LOCKED_OUT: 'Your account has been locked-out. Contact your ' +
+		                              'administrator.',
+		NT_STATUS_ACCOUNT_RESTRICTION: 'Your account is restricted. Contact your administrator.',
+		NT_STATUS_INVALID_ACCOUNT_NAME: 'Recheck your username. If this problem persists, ' +
+		                                'contact your administrator.',
+		NT_STATUS_NAME_TOO_LONG: 'Recheck your username. If this problem persists, contact ' +
+		                         'your administrator.',
+		NT_STATUS_PASSWORD_EXPIRED: 'You waited too much to change your password. Thus, your ' +
+		                            'password has been expired. Contact your administrator.',
 	}
 };
-const SERVER_ERROR_CODE = {
-	0: {  // TIMEOUT
-		'title': 'Timeout!',
-		'message': 'A timeout occurred. Verify your username and password. If this problem persists, contact your ' +
-		           'administrator. If you tried too much, your account may be disabled.'
-	},
-	1: {  // SMBPASSWD_ERROR
-		'title': 'Internal error!',
-		'message': 'An error occurred. Verify your username and password. If this problem persists, contact your ' +
-		           'administrator. If you tried too much, your account may be disabled.'
-	},
-	2: {  // NT_STATUS_ACCESS_DENIED
-		'title': 'Login Failure',
-		'message': 'Recheck your password and username. If this problem persists, contact your administrator. If you ' +
-		           'tried too much, your account may be disabled.'
-	},
-	3: {  // NT_STATUS_ACCOUNT_DISABLED
-		'title': 'Disabled Account',
-		'message': 'Your account has been disabled. Contact your administrator.'
-	},
-	4: {  // NT_STATUS_ACCOUNT_LOCKED_OUT
-		'title': 'Locked-Out Account',
-		'message': 'Your account has been locked-out. Contact your administrator.'
-	},
-	5: {  // NT_STATUS_ACCOUNT_RESTRICTION
-		'title': 'Restricted Account',
-		'message': 'Your account is restricted. Contact your administrator.'
-	},
-	6: {  // NT_STATUS_INVALID_ACCOUNT_NAME
-		'title': 'Invalid username',
-		'message': 'Recheck your username. If this problem persists, contact your administrator.'
-	},
-	7: {  // NT_STATUS_NAME_TOO_LONG
-		'title': 'Name too long',
-		'message': 'Recheck your username. If this problem persists, contact your administrator.'
-	},
-	8: {  // NT_STATUS_PASSWORD_EXPIRED
-		'title': 'Password expired',
-		'message': 'You waited too much to change your password. Thus, your password has been expired. Contact your ' +
-		           'administrator.'
-	},
+
+/**
+ * @returns the first key corresponding to the given value, else, undefined
+ */
+Object.getKeyByValue = function(object, value) {
+	return Object.keys(object).find(function(key) { return object[key] === value });
+};
+HTMLFormElement.prototype.enable = function() {
+	this.querySelectorAll('[type=submit]').forEach(function(e) {
+		e.removeAttribute('disabled');
+	});
+};
+HTMLFormElement.prototype.disable = function() {
+	this.querySelectorAll('[type=submit]').forEach(function(e) {
+		e.setAttribute('disabled', true);
+	});
+};
+HTMLFormElement.prototype.loading = function() {
+	this.querySelectorAll('[type=submit]').forEach(function(e) {
+		e.dataset.text = e.innerHTML;
+		e.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span><span class="visually-hidden">Loading...</span>';
+	});
+	this.disable();
+};
+HTMLFormElement.prototype.end_loading = function() {
+	this.querySelectorAll('[type=submit]').forEach(function(e) {
+		e.innerHTML = e.dataset.text;
+	});
+	this.validate();
 };
 
-SUCCESS_ERROR_CODE = 0
-CLIENT_ERROR = 1
-SERVER_ERROR = 2
 
-
-function check_confirmpassword() {
-	var newpassword = document.getElementById('newpassword').value;
-	var confirmpassword = document.getElementById('confirmpassword').value;
-	return newpassword == confirmpassword;
+function _display_msg(form, msg_type, text) {
+	if (typeof(form.msg) == 'undefined') {
+		form.msg = document.createElement('p');
+		form.msg.setAttribute('role', 'alert');
+		form.insertBefore(form.msg, form.firstChild);
+	}
+	form.msg.classList.value = 'mt-3 alert alert-' + msg_type;
+	form.msg.innerText = text;
+	form.msg.scrollIntoView({behavior: "smooth", block: "center", inline: "center"});
 }
 
-function is_form_valid() {
-	var form = document.getElementById('form');
-	var inputs = form.getElementsByTagName('input');
-	for (var i = 0, c = inputs.length; i < c; ++i) {
-		if (!inputs[i].validity.valid) {
-			return false;
+function display_failure(form, text) {
+	return _display_msg(form, 'danger', text);
+}
+
+function display_success(form) {
+	return _display_msg(form, 'success', API.SUCCESS[document.body.dataset.pageid]);
+}
+
+
+function changePasswdValidate(currentElement) {
+	const passwd_field = document.getElementById('newpassword')
+	const confirm_field = document.getElementById('confirmpassword')
+	var is_valid = true;
+
+	if (passwd_field.value != confirm_field.value) {
+		is_valid = false;
+	}
+	if (currentElement == null || currentElement == passwd_field || currentElement == confirm_field) {
+		confirm_field.classList.add(is_valid ? 'is-valid' : 'is-invalid');
+		confirm_field.classList.remove(is_valid ? 'is-invalid' : 'is-valid');
+	}
+	if (currentElement == null || currentElement == confirm_field) {
+		confirm_field.parentElement.classList.remove('was-validated');
+	}
+
+	return is_valid;
+}
+
+function send_json(form) {
+	return fetch(
+		form.action,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(gen_json_from_form(form))
 		}
-	}
-	return true;
-}
-
-function confirmpassword_handler() {
-	if (!check_confirmpassword()) {
-		disable_submit();
-		document.getElementById('confirmpasswd_error').style.display = 'block';
-	} else {
-		review_submit_status();
-		document.getElementById('confirmpasswd_error').style.display = 'none';
-	}
-}
-
-function disable_submit() {
-	document.getElementById('submit').disabled = true;
-}
-function review_submit_status() {
-	if (check_confirmpassword() && is_form_valid()) {
-		document.getElementById('submit').disabled = false;
-	} else {
-		disable_submit();
-	}
-}
-
-function _display_msg(msg_type, msg_data) {
-	var form_result = document.getElementById('form_result');
-	var title = form_result.getElementsByTagName('h2')[0];
-	var msg = form_result.getElementsByTagName('p')[0];
-	title.innerText = msg_data.title;
-	msg.innerText = msg_data.message;
-	form_result.className = msg_type + '-msg';
-}
-
-function display_failure(error_data) {
-	return _display_msg('error', error_data);
-}
-
-function display_success() {
-	return _display_msg('success', SUCCESS);
-}
-
-function loading() {
-	disable_submit();
-	var submit = document.getElementById('submit');
-	submit.type = "image";
-	submit.disabled = true;
-}
-function end_loading() {
-	review_submit_status();
-	var submit = document.getElementById('submit');
-	submit.type = "submit";
-	submit.disabled = false;
-}
-
-function submit(event) {
-	event.preventDefault();
-	loading();
-	var endpoint = './api/changepasswd';
-	var data = {
-		'username': document.getElementById('username').value,
-		'oldpassword': document.getElementById('password').value,
-		'newpassword': document.getElementById('newpassword').value,
-		'confirmpassword': document.getElementById('confirmpassword').value,
-	};
-
-	fetch(endpoint, {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify(data)
-	}).then(function(response) {
+	).then(function(response){
 		if (!response.ok) {
-			display_failure(UNKNOWN_ERROR);
-			return false;
+			throw new Error("Not a JSON response");
 		}
 		return response.json();
-	}).then(function(json) {
-		if (json === false) {
-			return;
-		}
-
-		if (json.type == SUCCESS_ERROR_CODE) {
-			display_success();
-		}
-		else if (json.type == CLIENT_ERROR) {
-			if (json.data.error_code in CLIENT_ERROR_CODE) {
-				display_failure(CLIENT_ERROR_CODE[json.data.error_code])
-			}
-			else {
-				display_failure(UNKNOWN_CLIENT_ERROR)
-			}
-		}
-		else if (json.type == SERVER_ERROR) {
-			if (json.data.error_code in SERVER_ERROR_CODE) {
-				display_failure(SERVER_ERROR_CODE[json.data.error_code])
-			}
-			else {
-				display_failure(UNKNOWN_SERVER_ERROR)
-			}
-		}
-		else {
-			display_failure(UNKNOWN_ERROR);
-		}
-	}).catch(function() {
-		display_failure(UNKNOWN_ERROR);
-	}).finally(function() {
-		end_loading();
 	});
 }
 
-(function(window, document) {
-	var newpassword_fields = [
-		document.getElementById('newpassword'),
-		document.getElementById('confirmpassword')
-	];
-	var other_fields = [
-		document.getElementById('username'),
-		document.getElementById('password')
-	];
-	var events_input_changed = [
-		"change",
-		"keypress",
-		"keyup",
-		"keydown"
-	];
-	for (var i = 0, c = newpassword_fields.length; i < c; ++i) {
-		for (var j = 0, d = events_input_changed.length; j < d; ++j) {
-			newpassword_fields[i].addEventListener(events_input_changed[j], confirmpassword_handler);
+function gen_json_from_form(form) {
+	var i, input,
+		res = {};
+
+	for (i = 0; i < form.elements.length; ++i) {
+		input = form.elements[i];
+		res[input.id] = input.value;
+	}
+	return JSON.stringify(res);
+}
+
+function gen_submit_fnc(validator) {
+	function submit(event) {
+		const form = event.currentTarget;
+		event.preventDefault();
+		form.classList.add('was-validated');
+
+		if (validator()) {
+			form.loading()
+			send_json(
+				form
+			).then(function(json) {
+				if (json.type == API.ERROR_CODE.SUCCESS) {
+					return display_success(form);
+				}
+
+				var error_code_obj, error_code_idx;
+				if (json.type == API.ERROR_CODE.CLIENT_ERROR) {
+					error_code_obj = API.CLIENT_ERROR;
+					error_code_idx = Object.getKeyByValue(API.CLIENT_ERROR_CODE, json.data.error_code);
+				}
+				else if (json.type == API.ERROR_CODE.SERVER_ERROR) {
+					error_code_obj = API.SERVER_ERROR;
+					error_code_idx = Object.getKeyByValue(API.SERVER_ERROR_CODE, json.data.error_code);
+				}
+				else {
+					throw new Error('Unknown error code');
+				}
+
+				if (typeof(error_code_idx) == 'undefined') {
+					// No key is corresponding
+					display_failure(form, error_code_obj.UNKNOWN_ERROR);
+					return;
+				}
+				display_failure(form, error_code_obj[error_code_idx]);
+			}).catch(function() {
+				display_failure(form, API.UNKNOWN_ERROR);
+			}).finally(function() {
+				form.end_loading();
+			});
 		}
 	}
-	for (var i = 0, c = other_fields.length; i < c; ++i) {
-		for (var j = 0, d = events_input_changed.length; j < d; ++j) {
-			other_fields[i].addEventListener(events_input_changed[j], review_submit_status);
+	return submit;
+}
+
+function gen_validate_fnc(form, callback_form_validation) {
+	function validate_form(event) {
+		const trigger_element = typeof(event) == 'undefined' ? null : event.currentTarget;
+		var input, i, c;
+		var is_form_valid = true;
+		var inputs = form.elements;
+
+		for (i = 0, c = inputs.length; i < c; ++i) {
+			var input = inputs[i];
+			if (!input.validity.valid) {
+				is_form_valid = false;
+			}
+			if (input == trigger_element) {
+				input.parentElement.classList.add('was-validated');
+			}
 		}
+
+		if (!callback_form_validation(trigger_element)) {
+			is_form_valid = false;
+		}
+
+		if (is_form_valid) {
+			form.enable()
+		}
+		else {
+			form.disable()
+		}
+		return is_form_valid;
 	}
 
-	document.getElementById('form').addEventListener("submit", submit);
+	return validate_form;
+}
+
+function bind_form_validation(callback_form_validation) {
+	var form = document.getElementById('form'),
+		i = 0,
+		j = 0,
+		c = 0,
+		d = 0;
+
+	var events_input_change_content = [
+		'change',
+		'keypress',
+		'keyup',
+		'keydown'
+	];
+
+	var validator = gen_validate_fnc(form, callback_form_validation);
+	var inputs = form.elements;
+	for (i = 0, c = inputs.length; i < c; ++i) {
+		for (j = 0, d = events_input_change_content.length; j < d; ++j) {
+			inputs[i].addEventListener(events_input_change_content[j], validator);
+		}
+	}
+	form.addEventListener('submit', gen_submit_fnc(validator));
+	form.validate = validator;
+}
+
+(function(window, document) {
+	switch (document.body.dataset.pageid) {
+		case 'changepasswd':
+			bind_form_validation(
+				changePasswdValidate
+			);
+			break;
+
+		default:
+	}
 })(window, document);

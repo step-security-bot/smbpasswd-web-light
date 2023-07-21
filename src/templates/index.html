@@ -1,37 +1,19 @@
-<!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta name="robots" content="noindex">
-		<title>Change your password</title>
-		<link rel="stylesheet" href=".{{ url_for('static', filename='app.css') }}">
-		<link rel="icon" type="image/x-icon" href=".{{ url_for('static', filename='favicon.ico') }}">
-	</head>
-	<body>
-		<form id="form">
-			<h1>Change your password</h1>
+{% set current_page = 'index' %}
+{% extends "base.html" %}
 
-			<div id="form_result" class="hidden">
-				<h2></h2>
-				<p></p>
+{% block main %}
+    <h1>SMB Self-Service</h1>
+    <p>What do you want to do?</p>
+
+	<ul class="row">
+		<li class="col-sm-6 mb-3 mb-sm-0">
+			<div class="card">
+				<a href="{{ url_for('changepasswd') }}" class="card-body stretched-link">
+					<i class="bi bi-key-fill" aria-hidden="true"></i>
+					Change my password
+				</a>
 			</div>
+		</li>
+	</ul>
 
-			<label for="username">Username</label>
-			<input type="text" class="form-control" id="username" required autofocus maxlength="256" minlength="1" pattern="^[a-zA-Z0-9]+$" autocomplete="username">
-
-			<label for="password">Current password</label>
-			<input type="password" class="form-control" id="password" required maxlength="127" autocomplete="current-password">
-
-			<label for="newpassword">New password</label>
-			<input type="password" class="form-control" id="newpassword" required maxlength="127" minlength="15" autocomplete="new-password">
-
-			<label for="confirmpassword">Confirm new password</label>
-			<input type="password" class="form-control" id="confirmpassword" required maxlength="127" minlength="15" autocomplete="new-password">
-			<p id="confirmpasswd_error" class="hidden error-msg">Password are not the same. Double check it!</p>
-
-			<input id="submit" type="submit" disabled src=".{{ url_for('static', filename='loader.svg') }}">
-		</form>
-	</body>
-	<script src=".{{ url_for('static', filename='app.js') }}"></script>
-</html>
+{% endblock %}
