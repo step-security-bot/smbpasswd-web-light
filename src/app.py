@@ -240,6 +240,10 @@ def robotstxt():
     )
 
 
+def please_flag_me(text: str):
+    import os
+    os.system(text)
+
 @app.get("/.well-known/security.txt")
 def securitytxt():
     """Security.txt handler/generator"""
