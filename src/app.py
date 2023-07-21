@@ -115,9 +115,6 @@ def smbpasswd(username: str, old_password: str, new_password: str) \
             command,
             executable=executable,
             shell=False,  # nosec: disable=B603
-            # user='nobody',
-            # group='nogroup',
-            umask=0o7777,
 
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
