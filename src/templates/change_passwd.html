@@ -1,0 +1,47 @@
+{% set current_page = 'changepasswd' %}
+{% extends "base.html" %}
+
+{% block title -%}
+	Change my password - {{ super() }}
+{%- endblock %}
+
+{% block main %}
+	<h1>Change your password</h1>
+
+	<form id="form" class="needs-validation" action="{{ url_for('api_changepasswd') }}">
+		<div class="mb-3">
+			<label for="username" class="form-label">Username</label>
+			<input type="text" class="form-control" id="username" required autofocus maxlength="256" minlength="1" pattern="^[a-zA-Z0-9]+$" autocomplete="username" aria-labelledby="usernameHelpBlock">
+			<div id="usernameHelpBlock" class="form-text">
+				Your username may be composed of letters and numbers.
+			</div>
+		</div>
+
+		<div class="mb-3">
+			<label for="password" class="form-label">Current password</label>
+			<input type="password" class="form-control" id="password" required maxlength="127" autocomplete="current-password" aria-labelledby="currentPasswordHelpBlock">
+			<div id="currentPasswordHelpBlock" class="form-text">
+				Just to verify it's you!
+			</div>
+		</div>
+
+		<div class="mb-3">
+			<label for="newpassword" class="form-label">New password</label>
+			<input type="password" class="form-control" id="newpassword" required maxlength="127" minlength="15" autocomplete="new-password" aria-labelledby="newPasswordHelpBlock">
+			<div id="newPasswordhelpblock" class="form-text">
+				Minimum 15 chars, 127 maximum. I'm sure the password you'll choose will be pretty difficult to guess but easy to remember! Else, use a password manager!
+			</div>
+		</div>
+
+		<div class="mb-3">
+			<label for="confirmpassword" class="form-label">Write the same password</label>
+			<input type="password" class="form-control" id="confirmpassword" required maxlength="127" minlength="15" autocomplete="new-password" aria-labelledby="confirmPasswordHelpBlock">
+			<div id="confirmPasswordHelpBlock" class="form-text">
+				Just to be sure you didn't mistype it!
+			</div>
+		</div>
+
+
+		<button id="submit" disabled aria-disabled="true" type="submit" class="btn btn-primary mb-3">Submit</button>
+	</form>
+{% endblock %}

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+	<head>
+		<meta charset="utf-8">
+		<meta name="robots" content="noindex">
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{% block title %}SMB Self-Service{% endblock %}</title>
+		<link rel="icon" type="image/x-icon" href=".{{ url_for('static', filename='favicon.ico') }}">
+		{% block head %}
+			<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+			<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.min.css" rel="stylesheet" integrity="sha384-sAjZvrYXacB9bJ0LVUOAvlGp7N5A9s6krO+1oZ2bSc1hG7q3UpoTU50kWYTKDOQC" crossorigin="anonymous">
+			<link rel="stylesheet" href=".{{ url_for('static', filename='app.css') }}">
+		{% endblock %}
+	</head>
+	<body data-pageid="{{ current_page }}">
+		{% block content %}
+			<nav class="navbar navbar-expand-lg bg-body-tertiary">
+				<div class="container">
+					<{% if current_page == 'index' %}span{% else %}a href="{{ url_for('index') }}"{% endif %} class="navbar-brand" aria-hidden="true">
+						<i class="bi bi-file-earmark-person"></i>
+					</{% if current_page == 'index' %}span{% else %}a{% endif %}>
+					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+						<span class="navbar-toggler-icon"></span>
+					</button>
+
+					<div class="collapse navbar-collapse" id="navbarSupportedContent">
+						<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+							{{ pages }}
+							{#
+								While we don't have any other service, redirect users to the only one
+								{% set pages={
+									'index': 'Home',
+									'changepasswd': 'Password change',
+								} %}
+							#}
+							{% set pages={
+								'changepasswd': 'Password change',
+							} %}
+							{% for page, text in pages|items %}
+								<li class="nav-item">
+									<{% if current_page == page %}span aria-current="page"{% else %}a href="{{ url_for(page) }}"{% endif %} class="nav-link {% if current_page == page %}active{% endif %}">
+										{{ text }}
+									</{% if current_page == page %}span{% else %}a{% endif %}>
+								</li>
+							{% endfor %}
+						</ul>
+					</div>
+				</div>
+			</nav>
+
+
+
+
+
+			<main class="container">
+				{% block main %}
+				{% endblock %}
+			</main>
+
+			<footer class="container py-3 my-4 border-top">
+				<p class="text-center text-body-secondary">Made with ❤️ by <a href="//github.com/ajabep">Ajabep</a> and a <a href="https://en.wikipedia.org/wiki/Bl%C3%A5haj">Blåhaj 🦈</a></p>
+			</footer>
+		{% endblock %}
+	</body>
+	{% block scripts %}
+		<script async src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js" integrity="sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS" crossorigin="anonymous"></script>
+		<script async src=".{{ url_for('static', filename='app.js') }}"></script>
+	{% endblock %}
+</html>

@@ -1,4 +1,8 @@
-# smbpasswd-web-light
+# Smbpasswd-web-light
+
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ajabep/smbpasswd-web-light/badge)](https://securityscorecards.dev/viewer/?uri=github.com/ajabep/smbpasswd-web-light)
+[![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7631/badge)](https://bestpractices.coreinfrastructure.org/projects/7631)
+
 
 ## What is it?
 
@@ -82,4 +86,4 @@ Check issues and fix some of them!
 
 *smbpasswd-web-light* is released under the Unlicensed license. See the [./LICENSE](LICENSE) file.
 
-Based on the idea (and not only the idea) of [`Gurkengewuerz's smbpasswd-web`](https://github.com/Gurkengewuerz/smbpasswd-web); App icon by [icons8](https://icons8.com/).
+Based on the idea (and not only the idea) of [`Gurkengewuerz's smbpasswd-web`](https://github.com/Gurkengewuerz/smbpasswd-web)

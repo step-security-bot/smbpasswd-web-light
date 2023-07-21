@@ -7,6 +7,7 @@ no user adding, no machine account, nothing, plain simple changing a password.
 
 import argparse
 import enum
+import json
 import logging
 import os
 import secrets
@@ -15,9 +16,10 @@ import sys
 import textwrap
 import traceback
 import typing
+import re
 
 from werkzeug.middleware.proxy_fix import ProxyFix
-from flask import Flask, request, Response, jsonify, render_template, abort
+from flask import Flask, request, Response, jsonify, render_template, abort, redirect, url_for
 
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_ADDRESS = '0.0.0.0'  # nosec: disable=104
@@ -26,6 +28,8 @@ DEFAULT_PROTO = 'http'
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex()
+
+SMB_USERNAME_VALIDATOR = re.compile('^[a-zA-Z0-9]{1,256}$')
 
 
 @enum.unique
@@ -41,6 +45,7 @@ class APIClientErrorCode(enum.IntEnum):
     """Client error code"""
     UNKNOWN_ERROR = -1
     PASSWORDS_DIFFERENT = 0
+    INVALID_FIELDS = 2
 
 
 @enum.unique
@@ -164,6 +169,19 @@ def smbpasswd(username: str, old_password: str, new_password: str) \
         return APIServerErrorCode.UNKNOWN_ERROR
 
 
+@app.context_processor
+def inject_data() -> dict:
+    """Inject global variables in templates"""
+    return {
+        'flask_data': {
+            'pages': {
+                index.__name__: 'Home',
+                changepasswd.__name__: 'Password change',
+            }
+        }
+    }
+
+
 @app.before_request
 def force_hostname():
     """Force the usage of the right hostname"""
@@ -176,10 +194,16 @@ def force_hostname():
 @app.after_request
 def security_headers(response: Response) -> Response:
     """Setup some security headers if not already present"""
+    # pylint: disable=line-too-long
     headers = {
-        'Content-Security-Policy': "default-src 'self'; object-src 'none'; base-uri 'none'; "
-                                   "sandbox allow-forms allow-scripts allow-same-origin; "
-                                   "form-action 'self'; frame-ancestors 'none'",
+        'Content-Security-Policy': "default-src 'self'; "
+                                   "img-src 'self' data:; "
+                                   "font-src 'self' cdn.jsdelivr.net; "
+                                   "style-src-elem 'self' cdn.jsdelivr.net; "
+                                   "script-src 'self' 'sha384-fbbOQedDUMZZ5KreZpsbe1LCZPVmfTnH7ois6mU1QK+m14rQ1l2bGBq41eYeM/fS'; "  # noqa=E501
+                                   "object-src 'none'; base-uri 'none'; sandbox allow-forms "
+                                   "allow-scripts allow-same-origin; form-action 'self'; "
+                                   "frame-ancestors 'none'",
         'X-Content-Type-Options': 'nosniff',
         'Referer': 'no-referrer',
         'Permissions-Policy': 'accelerometer=(), ambient-light-sensor=(), autoplay=(), '
@@ -235,21 +259,40 @@ def securitytxt():
 
 
 @app.get("/")
-def index():
+def index() -> Response:
+    """List of services"""
+    # While we don't have any other service, redirect users to the only one
+    return redirect(url_for('changepasswd'), code=302)
+    # return render_template('index.html')
+
+
+@app.get("/change-password")
+def changepasswd() -> str:
     """Form to change the passwd"""
-    return render_template('index.html')
+    return render_template('change_passwd.html')
 
 
 @app.post('/api/changepasswd')
-def api():
-    """Endpoint to change the passwd, in order to allow other program to use it."""
-    username = request.json['username']
-    oldpasswd = request.json['oldpassword']
-    passwd = request.json['newpassword']
-    confirmpasswd = request.json['confirmpassword']
+def api_changepasswd() -> Response:
+    """Endpoint to change the passwd"""
+    data = json.loads(request.json)
+    username = str(data['username']) or ''
+    oldpasswd = str(data['oldpassword']) or ''
+    passwd = str(data['newpassword']) or ''
+    confirmpasswd = str(data['confirmpassword']) or ''
 
     if passwd != confirmpasswd:
         return api_client_error(APIClientErrorCode.PASSWORDS_DIFFERENT)
+
+    if '' in [username, oldpasswd, passwd, confirmpasswd]:
+        return api_client_error(APIClientErrorCode.INVALID_FIELDS)
+
+    if len(username) < 1 or len(username) > 256 or \
+            SMB_USERNAME_VALIDATOR.match(username) is not None:
+        return api_client_error(APIClientErrorCode.INVALID_FIELDS)
+
+    if len(passwd) < 15 or len(passwd) > 127:
+        return api_client_error(APIClientErrorCode.INVALID_FIELDS)
 
     logging.info("Trying to change the password of %s", username)
 
