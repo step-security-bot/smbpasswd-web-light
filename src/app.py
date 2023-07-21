@@ -171,6 +171,7 @@ def smbpasswd(username: str, old_password: str, new_password: str) \
 
 @app.context_processor
 def inject_data() -> dict:
+    """Inject global variables in templates"""
     return {
         'flask_data': {
             'pages': {
@@ -193,6 +194,7 @@ def force_hostname():
 @app.after_request
 def security_headers(response: Response) -> Response:
     """Setup some security headers if not already present"""
+    # pylint: disable=line-too-long
     headers = {
         'Content-Security-Policy': "default-src 'self'; "
                                    "img-src 'self' data:; "
@@ -257,9 +259,9 @@ def securitytxt():
 
 
 @app.get("/")
-def index() -> str | Response:
+def index() -> Response:
     """List of services"""
-    # TODO While we don't have any other service, redirect users to the only one
+    # While we don't have any other service, redirect users to the only one
     return redirect(url_for('changepasswd'), code=302)
     # return render_template('index.html')
 
