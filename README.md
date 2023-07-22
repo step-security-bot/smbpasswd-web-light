@@ -2,6 +2,7 @@
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/ajabep/smbpasswd-web-light/badge)](https://securityscorecards.dev/viewer/?uri=github.com/ajabep/smbpasswd-web-light)
 [![OpenSSF Best Practices](https://bestpractices.coreinfrastructure.org/projects/7631/badge)](https://bestpractices.coreinfrastructure.org/projects/7631)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=ajabeporg_smbpasswd-web-light&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=ajabeporg_smbpasswd-web-light)
 
 
 ## What is it?
